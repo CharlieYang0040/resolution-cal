@@ -2,7 +2,7 @@
 
 Python과 PySide6로 제작된 간단하면서도 강력한 GUI 애플리케이션입니다. 이미지/비디오 해상도, 종횡비, 총 픽셀 수를 계산하며, CG 아티스트, 비디오 편집자 등 다양한 화면이나 이미지 크기를 다루는 분들을 위해 설계되었습니다.
 
-![image](https://github.com/user-attachments/assets/b571f7e8-7220-44eb-b74b-50d9d5d00292)
+![이미지 설명](resources/screenshot.png)
 
 ## 주요 기능
 
