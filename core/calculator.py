@@ -192,4 +192,54 @@ class ResolutionCalculator:
         decimal_part = abs(self._height - Decimal(self.height_int))
         if decimal_part.is_zero():
             return ""
-        return f"{decimal_part:.2f}"[1:] 
+        return f"{decimal_part:.2f}"[1:]
+
+    # --- New Property for Total Pixels ---
+    @property
+    def total_pixels(self) -> Decimal:
+        """Calculates the total number of pixels (width * height)."""
+        try:
+            # Use integer values for pixel count
+            return Decimal(self.width_int) * Decimal(self.height_int)
+        except Exception:
+            return Decimal("0") # Return 0 if calculation fails
+
+    # --- New Method for Scaling ---
+    def multiply_by_scale(self, scale_factor_str: str):
+        """Multiplies the current width and height by the given scale factor."""
+        print(f"[Calc Debug] multiply_by_scale called with scale: {scale_factor_str}")
+        try:
+            scale_factor = Decimal(scale_factor_str)
+            if scale_factor <= 0:
+                raise ValueError("Scale factor must be positive")
+
+            # Store current lock state and temporarily unlock if needed for independent scaling
+            was_locked = self._ratio_locked
+            if was_locked:
+                self.lock_ratio(False) # Temporarily unlock to scale both independently
+
+            new_width = (self._width * scale_factor).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            new_height = (self._height * scale_factor).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+            # Validate before setting
+            if new_width <= 0 or new_height <= 0:
+                 print("[Calc Debug Warning] Scaled dimensions would be non-positive. No change made.")
+                 if was_locked: # Restore lock state if we temporarily unlocked
+                     self.lock_ratio(True)
+                 return
+
+            # Use setters to handle potential side effects (like ratio calculation if unlocked)
+            # Note: Since we unlocked, ratio will be recalculated by setters if was_locked was false.
+            # If was_locked was true, we'll re-lock and recalculate below.
+            self.width = new_width
+            self.height = new_height
+
+            # Restore lock state and recalculate ratio if it was locked initially
+            if was_locked:
+                self.lock_ratio(True) # This will recalculate the ratio based on the new W/H
+
+            print(f"[Calc Debug] Scaling applied. New W: {self._width}, H: {self._height}, Locked: {self._ratio_locked}, Ratio: {self._aspect_ratio}")
+
+        except (InvalidOperation, ValueError) as e:
+            print(f"Error applying scale: {e}")
+            # Consider if we need to restore lock state here as well in case of error mid-process 
